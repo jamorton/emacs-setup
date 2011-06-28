@@ -1,6 +1,4 @@
-Elpa/Marmalade packages that I've installed:
-=================================
+packages I have installed:
 
 magit
 gist
-color-them

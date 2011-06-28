@@ -96,6 +96,12 @@
 (require 'uniquify)
 (setq uniquify-buffer-name-style 'forward)
 
+;; color theme
+(require 'color-theme)
+(require 'color-theme-zenburn)
+(setq color-theme-is-global t)
+(color-theme-zenburn)
+
 ;; the end
 (provide 'jonanin)
 
