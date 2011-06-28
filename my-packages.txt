@@ -1,0 +1,6 @@
+Elpa/Marmalade packages that I've installed:
+=================================
+
+magit
+gist
+color-them

@@ -13,11 +13,12 @@
 
 ;; load elpa
 (when
-	(load (concat dotfiles-dir "/elpa"))
-  (package-initialize))
+  (load "~/.emacs.d/elpa/package.el")
+  (package-initialize)
+  (add-to-list 'package-archives
+    '("marmalade" . "http://marmalade-repo.org/packages/")))
 
-(add-to-list 'package-archives
-  '("marmalade" . "http://marmalade-repo.org/packages/"))
+
 
 ;; Load everything
 (require 'jonanin)
