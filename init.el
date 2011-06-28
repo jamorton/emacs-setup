@@ -22,4 +22,5 @@
 
 ;; Load everything
 (require 'jonanin)
+(require 'jonanin-binds)
 
