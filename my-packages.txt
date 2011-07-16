@@ -1,4 +1,0 @@
-packages I have installed:
-
-magit
-gist
