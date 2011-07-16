@@ -45,6 +45,13 @@
 (smart-tabs-advice c-indent-line c-basic-offset)
 (smart-tabs-advice c-indent-region c-basic-offset)
 
+;; Smart Tabs Python
+(smart-tabs-advice python-indent-line-1 python-indent)
+(add-hook 'python-mode-hook
+		  (lambda ()
+			(setq indent-tabs-mode t)
+			(setq tab-width (default-value 'tab-width))))
+
 ;; Automtically decide tab size and spacing etc
 (require 'guess-style)
 (add-hook 'c-mode-common-hook 'guess-style-guess-all)
@@ -87,10 +94,7 @@
 (column-number-mode 1)
 
 ;; Smooth scrolling (from http://www.emacswiki.org/emacs/SmoothScrolling)
-(setq mouse-wheel-scroll-amount '(1 ((shift) . 1)))
-(setq mouse-wheel-progressive-speed nil)
-(setq mouse-wheel-follow-mouse 't)
-(setq scroll-step 1)
+(require 'smooth-scrolling)
 
 ;; unique names
 (require 'uniquify)
@@ -101,6 +105,11 @@
 (require 'color-theme-zenburn)
 (setq color-theme-is-global t)
 (color-theme-zenburn)
+
+;; coffee-script mode
+(require 'coffee-mode)
+(add-to-list 'auto-mode-alist '("\\.coffee$" . coffee-mode))
+(add-to-list 'auto-mode-alist '("Cakefile" . coffee-mode))
 
 ;; the end
 (provide 'jonanin)
