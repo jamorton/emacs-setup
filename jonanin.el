@@ -4,6 +4,9 @@
 ;; Smart Tabs (http://www.emacswiki.org/emacs/SmartTabs)
 (setq-default tab-width 4)
 (setq cua-auto-tabify-rectangles nil)
+(setq c-default-style "linux")
+(setq tab-stop-list '(4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80))
+
 
 (defadvice align (around smart-tabs activate)
   (let ((indent-tabs-mode nil)) ad-do-it))
@@ -55,6 +58,7 @@
 ;; Automtically decide tab size and spacing etc
 (require 'guess-style)
 (add-hook 'c-mode-common-hook 'guess-style-guess-all)
+(global-guess-style-info-mode 1)
 
 ;; Interface stuff (from starter-kit)
 (when window-system
