@@ -18,9 +18,7 @@
   (add-to-list 'package-archives
     '("marmalade" . "http://marmalade-repo.org/packages/")))
 
-
-
 ;; Load everything
 (require 'jonanin)
 (require 'jonanin-binds)
-
+(require 'smart-tabs)
