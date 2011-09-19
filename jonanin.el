@@ -62,18 +62,24 @@
 (setq color-theme-is-global t)
 (color-theme-zenburn)
 
+(defun coffee-custom ()
+  "coffee-mode-hook"
+  (make-local-variable 'tab-width)
+  (set 'tab-width 2))
+
+(add-hook 'coffee-mode-hook
+  '(lambda() (coffee-custom)))
+
+
 ;; coffee-script mode
 (require 'coffee-mode)
 (add-to-list 'auto-mode-alist '("\\.coffee$" . coffee-mode))
 (add-to-list 'auto-mode-alist '("Cakefile" . coffee-mode))
 
-(defun coffee-custom ()
-  "coffee-mode-hook"
-  (make-local-variable 'tab-width)
-  (setq 'tab-width 2))
+;; Javascript mode
+(autoload 'js2-mode "js2-mode" nil t)
+(add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
 
-(add-hook 'coffee-mode-hook
-  '(lambda() (coffee-custom)))
 
 ;; the end
 (provide 'jonanin)
