@@ -84,6 +84,9 @@
     (set js2-pretty-multiline-decl-indentation-p t)
     (set js2-consistent-level-indent-inner-bracket-p t))))
 
+;; load magit
+(require 'magit)
+
 ;; the end
 (provide 'jonanin)
 

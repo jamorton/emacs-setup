@@ -10,6 +10,7 @@
 
 (add-to-list 'load-path dotfiles-dir)
 (add-to-list 'load-path (concat dotfiles-dir "/extra"))
+(add-to-list 'load-path (concat dotfiles-dir "/extra/magit"))
 
 ;; Load everything
 (require 'jonanin)
