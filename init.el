@@ -11,13 +11,6 @@
 (add-to-list 'load-path dotfiles-dir)
 (add-to-list 'load-path (concat dotfiles-dir "/extra"))
 
-;; load elpa
-(when
-  (load "~/.emacs.d/elpa/package.el")
-  (package-initialize)
-  (add-to-list 'package-archives
-    '("marmalade" . "http://marmalade-repo.org/packages/")))
-
 ;; Load everything
 (require 'jonanin)
 (require 'jonanin-binds)
