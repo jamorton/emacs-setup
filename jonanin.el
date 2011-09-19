@@ -6,6 +6,8 @@
 (setq-default tab-width 4)
 (setq cua-auto-tabify-rectangles nil)
 (setq c-default-style "linux")
+;; auto indent
+(define-key global-map (kbd "RET") 'newline-and-indent)
 
 ;; Automtically decide tab size and spacing etc
 (require 'guess-style)
