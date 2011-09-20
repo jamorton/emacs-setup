@@ -82,9 +82,10 @@
 (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
 (add-hook 'js2-mode-hook
   '(lambda() (
-    (set js2-pretty-multiline-decl-indentation-p t)
-    (set js2-consistent-level-indent-inner-bracket-p t)
-    (set js2-enter-indents-newline t))))
+    (set 'js2-pretty-multiline-decl-indentation-p t)
+    (set 'js2-consistent-level-indent-inner-bracket-p t)
+    (set 'js2-enter-indents-newline t)
+    (set 'js2-mirror-mode t))))
 
 ;; load magit
 (require 'magit)
