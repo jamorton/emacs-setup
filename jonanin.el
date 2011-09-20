@@ -72,7 +72,6 @@
 (add-hook 'coffee-mode-hook
   '(lambda() (coffee-custom)))
 
-
 ;; coffee-script mode
 (require 'coffee-mode)
 (add-to-list 'auto-mode-alist '("\\.coffee$" . coffee-mode))
@@ -84,7 +83,8 @@
 (add-hook 'js2-mode-hook
   '(lambda() (
     (set js2-pretty-multiline-decl-indentation-p t)
-    (set js2-consistent-level-indent-inner-bracket-p t))))
+    (set js2-consistent-level-indent-inner-bracket-p t)
+    (set js2-enter-indents-newline t))))
 
 ;; load magit
 (require 'magit)
