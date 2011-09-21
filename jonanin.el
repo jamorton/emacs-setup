@@ -82,7 +82,7 @@
       js2-consistent-level-indent-inner-bracket-p t
       js2-enter-indents-newline t
       js2-mirror-mode t
-	  js2-global-externs '(require console))
+	  js2-global-externs '("require" "console"))
 
 
 ;; load magit
