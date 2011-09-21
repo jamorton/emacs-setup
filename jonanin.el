@@ -6,8 +6,11 @@
 (setq-default tab-width 4)
 (setq cua-auto-tabify-rectangles nil)
 (setq c-default-style "linux")
+(setq tab-stop-list '(4 8 12 16 20 24 28 32 36 40 44 48 52 56 60
+						64 68 72 76 80 84 88 92 96 100 104 108 112
+						116 120))
 
-;; Automtically decide tab size and spacing etc
+;; Automatically decide tab size and spacing etc
 (require 'guess-style)
 (add-hook 'c-mode-common-hook 'guess-style-guess-all)
 (global-guess-style-info-mode 1)
@@ -82,7 +85,7 @@
       js2-consistent-level-indent-inner-bracket-p t
       js2-enter-indents-newline t
       js2-mirror-mode t
-	  js2-global-externs '("require" "console"))
+      js2-global-externs '("require" "console"))
 
 
 ;; load magit
