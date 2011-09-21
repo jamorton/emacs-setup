@@ -2,12 +2,10 @@
 ;; One file until I find categories worth splitting this up into
 
 ;; spacing settings
-(setq-default indent-tabs-mode nil)
+(setq-default indent-tabs-mode t)
 (setq-default tab-width 4)
 (setq cua-auto-tabify-rectangles nil)
 (setq c-default-style "linux")
-;; auto indent
-(define-key global-map (kbd "RET") 'newline-and-indent)
 
 ;; Automtically decide tab size and spacing etc
 (require 'guess-style)
@@ -83,7 +81,8 @@
 (setq js2-pretty-multiline-decl-indentation-p t
       js2-consistent-level-indent-inner-bracket-p t
       js2-enter-indents-newline t
-      js2-mirror-mode t)
+      js2-mirror-mode t
+	  js2-global-externs '(require console))
 
 
 ;; load magit
