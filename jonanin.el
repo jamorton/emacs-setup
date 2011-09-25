@@ -92,5 +92,15 @@
 ;; load magit
 (require 'magit)
 
+;; autocomplete
+(require 'auto-complete-config)
+(add-to-list 'ac-dictionary-directories (concat dotfiles-dir "/extra/ac-dict"))
+(ac-config-default)
+
+;; ropemacs
+(require 'pymacs)
+(pymacs-load "ropemacs" "rope-")
+(setq ropemacs-enable-autoimport t)
+
 ;; the end
 (provide 'jonanin)

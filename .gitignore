@@ -2,3 +2,4 @@ elpa/*
 backups
 auto-save-list
 !elpa/package.el
+ac-comphist.dat
