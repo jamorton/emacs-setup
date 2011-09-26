@@ -20,6 +20,6 @@
 (require 'auto-complete-config)
 (add-to-list 'ac-dictionary-directories (concat dotfiles-dir "/extra/ac-dict"))
 (ac-config-default)
-
+(global-auto-complete-mode t)
 
 (provide 'jonanin-input)
