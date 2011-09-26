@@ -14,5 +14,10 @@
 
 ;; Load everything
 (require 'jonanin)
+(require 'jonanin-interface)
+(require 'jonanin-input)
 (require 'jonanin-binds)
+(require 'jonanin-python)
+(require 'jonanin-js)
+(require 'jonanin-coffee)
 (require 'smart-tabs)
