@@ -4,7 +4,7 @@
 
 
 ;; spacing settings
-(setq-default indent-tabs-mode t)
+(setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
 (setq cua-auto-tabify-rectangles nil)
 (setq c-default-style "linux")
