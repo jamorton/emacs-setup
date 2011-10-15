@@ -20,4 +20,5 @@
 (require 'jonanin-python)
 (require 'jonanin-js)
 (require 'jonanin-coffee)
+(require 'jonanin-css)
 (require 'smart-tabs)
