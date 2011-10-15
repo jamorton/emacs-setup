@@ -45,6 +45,8 @@
       ido-use-filename-at-point 'guess
       ido-max-prospects 10)
 
-
+;; no splash
+(setq inhibit-splash-screen t)
+(setq inhibit-startup-message t)
 
 (provide 'jonanin-interface)

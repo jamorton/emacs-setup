@@ -21,4 +21,5 @@
 (require 'jonanin-js)
 (require 'jonanin-coffee)
 (require 'jonanin-css)
+(require 'jonanin-go)
 (require 'smart-tabs)
