@@ -1,0 +1,9 @@
+#!/bin/sh
+
+rm -f ./extra/*.elc
+rm -f ./extra/magit/*.elc
+emacs -batch -f batch-byte-compile ./extra/*.el
+emacs -batch -f batch-byte-compile ./extra/magit/*.el
+echo
+echo "Done"
+
