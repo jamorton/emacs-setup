@@ -11,6 +11,7 @@
 (add-to-list 'load-path dotfiles-dir)
 (add-to-list 'load-path (concat dotfiles-dir "/extra"))
 (add-to-list 'load-path (concat dotfiles-dir "/extra/magit"))
+(add-to-list 'load-path (concat dotfiles-dir "/extra/yasnippet"))
 
 ;; Load everything
 (require 'jonanin)
@@ -22,4 +23,5 @@
 (require 'jonanin-coffee)
 (require 'jonanin-css)
 (require 'jonanin-go)
-(require 'smart-tabs)
+(require 'jonanin-snippet)
+;;(require 'smart-tabs)
