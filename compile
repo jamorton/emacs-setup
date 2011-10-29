@@ -1,5 +1,8 @@
 #!/bin/sh
 
+git submodule init
+git submodule update
+
 rm -f ./extra/*.elc
 rm -f ./extra/magit/*.elc
 emacs -batch -f batch-byte-compile ./extra/*.el
