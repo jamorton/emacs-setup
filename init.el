@@ -24,4 +24,3 @@
 (require 'jonanin-css)
 (require 'jonanin-go)
 (require 'jonanin-snippet)
-;;(require 'smart-tabs)

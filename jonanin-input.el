@@ -23,4 +23,7 @@
 (ac-config-default)
 (global-auto-complete-mode t)
 
+;; mac keys
+(setq mac-command-modifier 'control)
+
 (provide 'jonanin-input)
