@@ -10,5 +10,10 @@
 ;; load magit
 (require 'magit)
 
+;; glsl
+(autoload 'glsl-mode "glsl-mode" nil t)
+(add-to-list 'auto-mode-alist '("\\.vert\\'" . glsl-mode))
+(add-to-list 'auto-mode-alist '("\\.frag\\'" . glsl-mode))
+
 ;; the end
 (provide 'jonanin)

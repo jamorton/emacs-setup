@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2010 Chris Wanstrath
 
-;; Version 0.3.0
+;; Version: 0.4.0
 ;; Keywords: CoffeeScript major mode
 ;; Author: Chris Wanstrath <chris@ozmm.org>
 ;; URL: http://github.com/defunkt/coffee-script
@@ -324,10 +324,14 @@ If FILENAME is omitted, the current buffer's file name is used."
 (defvar coffee-namespace-regexp "\\b\\(class\\s +\\(\\S +\\)\\)\\b")
 
 ;; Booleans
-(defvar coffee-boolean-regexp "\\b\\(true\\|false\\|yes\\|no\\|on\\|off\\|null\\)\\b")
+(defvar coffee-boolean-regexp "\\b\\(true\\|false\\|yes\\|no\\|on\\|off\\|null\\|undefined\\)\\b")
 
 ;; Regular Expressions
-(defvar coffee-regexp-regexp "\\/\\(\\\\.\\|\\[\\(\\\\.\\|.\\)+?\\]\\|[^/]\\)+?\\/")
+(defvar coffee-regexp-regexp "\\/\\(\\\\.\\|\\[\\(\\\\.\\|.\\)+?\\]\\|[^/
+]\\)+?\\/")
+
+;; Functions
+(defvar coffee-cs-function-regexp "\\s *\\([^ ]+\\)\\s *=\\s *\\(([^)]*)\\)?\\s *\\(->\\|=>\\)")
 
 ;; JavaScript Keywords
 (defvar coffee-js-keywords
@@ -367,6 +371,8 @@ If FILENAME is omitted, the current buffer's file name is used."
     (,coffee-assign-regexp . font-lock-type-face)
     (,coffee-regexp-regexp . font-lock-constant-face)
     (,coffee-boolean-regexp . font-lock-constant-face)
+    (,coffee-cs-function-regexp . (1 font-lock-function-name-face))
+    (,coffee-cs-function-regexp . (3 font-lock-function-name-face))
     (,coffee-keywords-regexp . font-lock-keyword-face)))
 
 ;;
@@ -636,9 +642,10 @@ line? Returns `t' or `nil'. See the README for more details."
         (end-of-line)
 
         ;; Optimized for speed - checks only the last character.
-        (when (some (lambda (char)
-                        (= (char-before) char))
-                      coffee-indenters-eol)
+        (when (and (char-before)
+                   (some (lambda (char)
+                           (= (char-before) char))
+                         coffee-indenters-eol))
           (setd indenter-at-eol t)))
 
       ;; If we found an indenter, return `t'.
@@ -675,6 +682,9 @@ line? Returns `t' or `nil'. See the README for more details."
 
   ;; code for syntax highlighting
   (setq font-lock-defaults '((coffee-font-lock-keywords)))
+
+  ;; treat "_" as part of a word
+  (modify-syntax-entry ?_ "w" coffee-mode-syntax-table)
 
   ;; perl style comment: "# ..."
   (modify-syntax-entry ?# "< b" coffee-mode-syntax-table)
@@ -727,3 +737,4 @@ line? Returns `t' or `nil'. See the README for more details."
 (add-to-list 'auto-mode-alist '("\\.coffee$" . coffee-mode))
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("Cakefile" . coffee-mode))
+;;; coffee-mode.el ends here

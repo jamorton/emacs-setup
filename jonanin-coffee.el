@@ -7,7 +7,9 @@
 (defun coffee-custom ()
   "coffee-mode-hook"
   (make-local-variable 'tab-width)
-  (set 'tab-width 2))
+  (set 'tab-width 2)
+  (set 'coffee-tab-width 2)
+  (local-set-key (kbd "RET") 'coffee-newline-and-indent))
 
 (add-hook 'coffee-mode-hook
   '(lambda() (coffee-custom)))

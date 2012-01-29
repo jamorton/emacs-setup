@@ -18,10 +18,10 @@
 (setq x-select-enable-clipboard t)
 
 ;; autocomplete
-(require 'auto-complete-config)
-(add-to-list 'ac-dictionary-directories (concat dotfiles-dir "/extra/ac-dict"))
-(ac-config-default)
-(global-auto-complete-mode t)
+;; (require 'auto-complete-config)
+;; (add-to-list 'ac-dictionary-directories (concat dotfiles-dir "/extra/ac-dict"))
+;; (ac-config-default)
+;; (global-auto-complete-mode t)
 
 ;; mac keys
 (setq mac-command-modifier 'control)
