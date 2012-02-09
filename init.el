@@ -12,6 +12,9 @@
 (add-to-list 'load-path (concat dotfiles-dir "/extra"))
 (add-to-list 'load-path (concat dotfiles-dir "/extra/magit"))
 (add-to-list 'load-path (concat dotfiles-dir "/extra/yasnippet"))
+(add-to-list 'load-path (concat dotfiles-dir "/extra/rust"))
+
+(byte-recompile-directory dotfiles-dir 0)
 
 ;; Load everything
 (require 'jonanin)
@@ -24,3 +27,4 @@
 (require 'jonanin-css)
 (require 'jonanin-go)
 (require 'jonanin-snippet)
+(require 'jonanin-rust)
