@@ -16,6 +16,8 @@
 ;;          (lambda ()
 ;;	    (add-to-list 'ac-sources 'ac-source-ropemacs)))
 
+(require 'cython-mode)
+
 (add-hook 'python-mode-hook
   (lambda ()
 	(local-set-key (kbd "RET") 'newline-and-indent)
@@ -42,7 +44,6 @@
       ad-do-it))))
 
 (ad-activate 'python-calculate-indentation)
-
 
 ;;(when (load "flymake" t)
 ;;  (defun flymake-pyflakes-init ()
