@@ -28,3 +28,4 @@
 (require 'jonanin-go)
 (require 'jonanin-snippet)
 (require 'jonanin-rust)
+(require 'jonanin-ruby)
