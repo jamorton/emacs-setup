@@ -7,5 +7,7 @@
 
 (add-hook 'ruby-mode-hook
   (lambda ()
-	(set-local-key (kbd "RET") 'newline-and-indent)
+	(local-set-key (kbd "RET") 'newline-and-indent)
 	))
+
+(provide 'jonanin-ruby)

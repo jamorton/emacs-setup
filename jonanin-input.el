@@ -5,7 +5,7 @@
 ;; spacing settings
 
 (c-set-offset 'substatement-open 0)
-(setq-default indent-tabs-mode t)
+(setq-default indent-tabs-mode nil)
 (setq-default cua-auto-tabify-rectangles nil)
 (setq-default c-basic-offset 4)
 (setq-default tab-width 4)

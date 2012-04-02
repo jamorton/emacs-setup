@@ -29,3 +29,21 @@
 (require 'jonanin-snippet)
 (require 'jonanin-rust)
 (require 'jonanin-ruby)
+
+(add-hook 'c-mode-common-hook '(lambda ()
+  (make-local-variable 'indent-tabs-mode)
+    (set 'indent-tabs-mode nil)
+  ))
+
+(custom-set-variables
+  ;; custom-set-variables was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
+ '(safe-local-variable-values (quote ((buffer-file-coding-system . utf-8-unix)))))
+(custom-set-faces
+  ;; custom-set-faces was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
+ )
