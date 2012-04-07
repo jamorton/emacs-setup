@@ -32,7 +32,7 @@
 
 (add-hook 'c-mode-common-hook '(lambda ()
   (make-local-variable 'indent-tabs-mode)
-    (set 'indent-tabs-mode nil)
+  (set 'indent-tabs-mode nil)
   ))
 
 (custom-set-variables

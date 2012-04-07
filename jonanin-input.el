@@ -17,11 +17,8 @@
 ;; Enable computer clipboard
 (setq x-select-enable-clipboard t)
 
-;; autocomplete
-;; (require 'auto-complete-config)
-;; (add-to-list 'ac-dictionary-directories (concat dotfiles-dir "/extra/ac-dict"))
-;; (ac-config-default)
-;; (global-auto-complete-mode t)
+;; remove trailing whitespace on save
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
 
 ;; mac keys
 (setq mac-command-modifier 'control)
