@@ -14,6 +14,8 @@
 (add-to-list 'load-path (concat dotfiles-dir "/extra/yasnippet"))
 (add-to-list 'load-path (concat dotfiles-dir "/extra/rust"))
 
+(setq max-specpdl-size 20000)
+(setq max-lisp-eval-depth 50000)
 (byte-recompile-directory dotfiles-dir 0)
 
 ;; Load everything

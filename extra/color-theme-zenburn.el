@@ -53,10 +53,12 @@
 ;; color definitions
 ;; colors with +x are lighter, colors with -x are darker
 (defvar zenburn-fg "#dcdccc")
+(defvar zenburn-fg-1 "#656555")
 (defvar zenburn-bg-1 "#2b2b2b")
 (defvar zenburn-bg "#3f3f3f")
 (defvar zenburn-bg+1 "#4f4f4f")
 (defvar zenburn-bg+2 "#5f5f5f")
+(defvar zenburn-bg+3 "#6f6f6f")
 (defvar zenburn-red+1 "#dca3a3")
 (defvar zenburn-red "#cc9393")
 (defvar zenburn-red-1 "#bc8383")
@@ -114,9 +116,28 @@
       ((t (:foreground ,zenburn-fg))))
      (escape-glyph-face ((t (:foreground ,zenburn-red))))
      (fringe ((t (:foreground ,zenburn-fg :background ,zenburn-bg))))
-     (header-line ((t (:foreground ,zenburn-yellow :background ,zenburn-bg-1
-                                   :box (:color ,zenburn-green :line-width 2)))))
+     (header-line ((t (:foreground ,zenburn-yellow :background ,zenburn-bg-1))))
      (highlight ((t (:background ,zenburn-bg+1))))
+
+     ;;; compilation
+     (compilation-column-face ((t (:foreground ,zenburn-yellow))))
+     (compilation-enter-directory-face ((t (:foreground ,zenburn-green))))
+     (compilation-error-face ((t (:inherit zenburn-error-face))))
+     (compilation-face ((t (:foreground ,zenburn-fg))))
+     (compilation-info-face ((t (:foreground ,zenburn-blue))))
+     (compilation-info ((t (:foreground ,zenburn-green+4 :underline t))))
+     (compilation-leave-directory-face ((t (:foreground ,zenburn-green))))
+     (compilation-line-face ((t (:foreground ,zenburn-yellow))))
+     (compilation-line-number ((t (:foreground ,zenburn-yellow))))
+     (compilation-message-face ((t (:foreground ,zenburn-blue))))
+     (compilation-warning-face ((t (:inherit zenburn-warning-face))))
+
+     ;;; grep
+     (grep-context-face ((t (:foreground ,zenburn-fg))))
+     (grep-error-face ((t (:inherit zenburn-error-face))))
+     (grep-hit-face ((t (:foreground ,zenburn-blue))))
+     (grep-match-face ((t (:inherit zenburn-strong-2-face))))
+     (match ((t (:background ,zenburn-bg-1 :foreground ,zenburn-orange :weight bold))))
 
      ;; faces used by isearch
      (isearch ((t (:foreground ,zenburn-yellow :background ,zenburn-bg-1))))
@@ -139,7 +160,7 @@
      (font-lock-builtin-face ((t (:foreground ,zenburn-blue))))
      (font-lock-comment-face ((t (:foreground ,zenburn-green))))
      (font-lock-comment-delimiter-face ((t (:foreground ,zenburn-green))))
-     (font-lock-constant-face ((t (:foreground ,zenburn-fg))))
+     (font-lock-constant-face ((t (:foreground ,zenburn-green+4))))
      (font-lock-doc-face ((t (:foreground ,zenburn-green+1))))
      (font-lock-doc-string-face ((t (:foreground ,zenburn-blue+1))))
      (font-lock-function-name-face ((t (:foreground ,zenburn-blue))))
@@ -147,11 +168,27 @@
      (font-lock-negation-char-face ((t (:foreground ,zenburn-fg))))
      (font-lock-preprocessor-face ((t (:foreground ,zenburn-blue))))
      (font-lock-string-face ((t (:foreground ,zenburn-red))))
-     (font-lock-type-face ((t (:foreground ,zenburn-yellow))))
-     (font-lock-variable-name-face ((t (:foreground ,zenburn-yellow))))
+     (font-lock-type-face ((t (:foreground ,zenburn-blue))))
+     (font-lock-variable-name-face ((t (:foreground ,zenburn-orange))))
      (font-lock-warning-face ((t (:inherit zenburn-warning-face))))
 
+     (c-annotation-face ((t (:inherit font-lock-constant-face))))
+
      ;;; external
+
+     ;; auctex
+     (font-latex-bold ((t (:inherit bold))))
+     (font-latex-warning ((t (:inherit font-lock-warning-face))))
+     (font-latex-sedate ((t (:inherit zenburn-strong-1-face))))
+     (font-latex-title-4 ((t (:inherit variable-pitch :weight bold))))
+
+     ;; auto-complete
+     (ac-candidate-face ((t (:background ,zenburn-bg+3 :foreground "black"))))
+     (ac-selection-face ((t (:background ,zenburn-blue-4 :foreground ,zenburn-fg))))
+     (popup-tip-face ((t (:background ,zenburn-yellow-2 :foreground "black"))))
+     (popup-scroll-bar-foreground-face ((t (:background ,zenburn-blue-5))))
+     (popup-scroll-bar-background-face ((t (:background ,zenburn-bg-1))))
+     (popup-isearch-match ((t (:background ,zenburn-bg :foreground ,zenburn-fg))))
 
      ;; diff
      (diff-added ((t (:foreground ,zenburn-green+4))))
@@ -194,7 +231,8 @@
      (erc-highlight-face ((t (:inherit hover-highlight))))
      (erc-input-face ((t (:foreground ,zenburn-yellow))))
      (erc-keyword-face ((t (:inherit zenburn-strong-1-face))))
-     (erc-nick-default-face ((t (:weigth bold))))
+     (erc-nick-default-face ((t (:weight bold))))
+     (erc-my-nick-face ((t (:foreground ,zenburn-red :weight bold))))
      (erc-nick-msg-face ((t (:inherit erc-default))))
      (erc-notice-face ((t (:foreground ,zenburn-green))))
      (erc-pal-face ((t (:foreground ,zenburn-orange :weight bold))))
@@ -271,6 +309,34 @@
      (ido-first-match ((t (:inherit zenburn-strong-1-face))))
      (ido-only-match ((t (:inherit zenburn-strong-2-face))))
      (ido-subdir ((t (:foreground ,zenburn-yellow))))
+
+     (js2-warning-face ((t (:underline ,zenburn-orange))))
+     (js2-error-face ((t (:inherit zenburn-error-face))))
+     (js2-jsdoc-tag-face ((t (:foreground ,zenburn-green-1))))
+     (js2-jsdoc-type-face ((t (:foreground ,zenburn-green+2))))
+     (js2-jsdoc-value-face ((t (:foreground ,zenburn-green+3))))
+     (js2-function-param-face ((t (:foreground, zenburn-green+3))))
+     ;(js2-instance-member-face)
+     ;(js2-private-member-face)
+     ;(js2-private-function-call-face)
+     ;(js2-jsdoc-html-tag-name-face)
+     ;(js2-jsdoc-html-tag-delimiter-face)
+     ;(js2-magic-paren-face)
+     (js2-external-variable-face ((t (:foreground ,zenburn-orange))))
+
+     ;; jabber-mode
+     (jabber-roster-user-away ((t (:foreground ,zenburn-green+2))))
+     (jabber-roster-user-online ((t (:foreground ,zenburn-blue-1))))
+     (jabber-roster-user-dnd ((t (:foreground ,zenburn-red+1))))
+     (jabber-rare-time-face ((t (:foreground ,zenburn-green+1))))
+     (jabber-chat-prompt-local ((t (:foreground ,zenburn-blue-1))))
+     (jabber-chat-prompt-foreign ((t (:foreground ,zenburn-red+1))))
+     (jabber-activity-face((t (:foreground ,zenburn-red+1))))
+     (jabber-activity-personal-face ((t (:foreground ,zenburn-blue+1))))
+
+
+     ;; linum-mode
+     (linum ((t (:foreground ,zenburn-fg-1 :background ,zenburn-bg-1))))
 
      ;; magit
      (magit-section-title ((t (:inherit zenburn-strong-1-face))))
@@ -393,6 +459,14 @@
      (rpm-spec-section-face ((t (:foreground ,zenburn-yellow))))
      (rpm-spec-tag-face ((t (:foreground ,zenburn-blue))))
      (rpm-spec-var-face ((t (:foreground ,zenburn-red))))
+
+     ;; rst-mode
+     (rst-level-1-face ((t (:foreground ,zenburn-orange))))
+     (rst-level-2-face ((t (:foreground ,zenburn-green+1))))
+     (rst-level-3-face ((t (:foreground ,zenburn-blue-1))))
+     (rst-level-4-face ((t (:foreground ,zenburn-yellow-2))))
+     (rst-level-5-face ((t (:foreground ,zenburn-cyan))))
+     (rst-level-6-face ((t (:foreground ,zenburn-green-1))))
 
      ;; show-paren
      (show-paren-mismatch ((t (:foreground ,zenburn-red-3 :weight bold))))
