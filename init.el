@@ -31,6 +31,7 @@
 (require 'jonanin-snippet)
 (require 'jonanin-rust)
 (require 'jonanin-ruby)
+(require 'jonanin-lua)
 
 (add-hook 'c-mode-common-hook '(lambda ()
   (make-local-variable 'indent-tabs-mode)
