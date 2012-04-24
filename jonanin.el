@@ -16,8 +16,8 @@
 (add-to-list 'auto-mode-alist '("\\.frag\\'" . glsl-mode))
 
 ;; use nxml-mode for html
-(fset 'html-mode 'nxml-mode)
-(setq-default rng-nxml-auto-validate-flag nil)
+;;(fset 'html-mode 'nxml-mode)
+;;(setq-default rng-nxml-auto-validate-flag nil)
 
 ;; the end
 (provide 'jonanin)
