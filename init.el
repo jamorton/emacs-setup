@@ -13,6 +13,7 @@
 (add-to-list 'load-path (concat dotfiles-dir "/extra/magit"))
 (add-to-list 'load-path (concat dotfiles-dir "/extra/yasnippet"))
 (add-to-list 'load-path (concat dotfiles-dir "/extra/rust"))
+(add-to-list 'load-path (concat dotfiles-dir "/extra/pony-mode/src"))
 
 (setq max-specpdl-size 20000)
 (setq max-lisp-eval-depth 50000)
