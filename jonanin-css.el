@@ -1,5 +1,5 @@
 
 ;; LESS css
-(require 'less-mode)
+(require 'less-css-mode)
 
 (provide 'jonanin-css)
