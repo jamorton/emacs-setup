@@ -49,4 +49,7 @@
 (setq inhibit-splash-screen t)
 (setq inhibit-startup-message t)
 
+;; truncate lines instead of wrapping them
+(set-default 'truncate-lines t)
+
 (provide 'jonanin-interface)
