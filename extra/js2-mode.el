@@ -305,6 +305,13 @@ If `js2-dynamic-idle-timer-adjust' is 0 or negative,
   :type 'boolean
   :group 'js2-mode)
 
+(defcustom js2-concat-multiline-strings t
+  "Non-nil to automatically turn a newline in mid-string into a
+string concatenation.  When `eol', the '+' will be inserted at the
+end of the line, otherwise, at the beginning of the next line."
+  :type '(choice (const t) (const eol) (const nil))
+  :group 'js2-mode)
+
 (defcustom js2-mode-squeeze-spaces t
   "Non-nil to normalize whitespace when filling in comments.
 Multiple runs of spaces are converted to a single space."
@@ -351,14 +358,6 @@ by setting this variable to t."
 It's perfectly legal to have a `return' and a `return foo' in the
 same function, but it's often an indicator of a bug, and it also
 interferes with type inference (in systems that support it.)"
-  :type 'boolean
-  :group 'js2-mode)
-
-(defcustom js2-strict-cond-assign-warning t
-  "Non-nil to warn about expressions like if (a = b).
-This often should have been '==' instead of '='.  If the warning
-is enabled, you can suppress it on a per-expression basis by
-parenthesizing the expression, e.g. if ((a = b)) ..."
   :type 'boolean
   :group 'js2-mode)
 
@@ -4460,7 +4459,7 @@ Returns nil if no applicable child is found."
         result
         fn
         (continue t))
-    (setq fn (if after '> '<))
+    (setq fn (if after '>= '<))
     (while (and kids continue)
       (setq kid (car kids))
       (if (funcall fn (+ beg (js2-node-pos kid)) pos)
@@ -4512,8 +4511,7 @@ Function also calls `js2-node-add-children' to add the parent link."
         pos)
     (unless buf
       (error "No buffer available for node %s" node))
-    (save-excursion
-      (set-buffer buf)
+    (with-current-buffer buf
       (buffer-substring-no-properties (setq pos (js2-node-abs-pos node))
                                       (+ pos (js2-node-len node))))))
 
@@ -4829,7 +4827,10 @@ You should use `js2-print-tree' instead of this function."
        ;; I'll wait for people to notice incorrect warnings.
        ((and (= tt js2-EXPR_VOID)
              (js2-expr-stmt-node-p node)) ; but not if EXPR_RESULT
-        (js2-node-has-side-effects (js2-expr-stmt-node-expr node)))
+        (let ((expr (js2-expr-stmt-node-expr node)))
+          (or (js2-node-has-side-effects expr)
+              (when (js2-string-node-p expr)
+                (string= "use strict" (js2-string-node-value expr))))))
        ((= tt js2-COMMA)
         (js2-node-has-side-effects (js2-infix-node-right node)))
        ((or (= tt js2-AND)
@@ -6244,7 +6245,7 @@ corresponding number.  Otherwise return -1."
           end (max (point-min) end))
     (if record
         (push (list beg end face) js2-mode-fontifications)
-      (put-text-property beg end 'face face))))
+      (put-text-property beg end 'font-lock-face face))))
 
 (defsubst js2-set-kid-face (pos kid len face)
   "Set-face on a child node.
@@ -6260,7 +6261,7 @@ FACE is the face to fontify with."
   (js2-set-face start (+ start length) 'font-lock-keyword-face))
 
 (defsubst js2-clear-face (beg end)
-  (remove-text-properties beg end '(face nil
+  (remove-text-properties beg end '(font-lock-face nil
                                     help-echo nil
                                     point-entered nil
                                     c-in-sws nil)))
@@ -6477,7 +6478,7 @@ of a simple name.  Called before EXPR has a parent node."
           "\\(?:param\\|argument\\)"
           "\\)"
           "\\s-*\\({[^}]+}\\)?"         ; optional type
-          "\\s-*\\[?\\([a-zA-Z0-9_$]+\\)?\\]?"  ; name
+          "\\s-*\\[?\\([a-zA-Z0-9_$\.]+\\)?\\]?"  ; name
           "\\>")
   "Matches jsdoc tags with optional type and optional param name.")
 
@@ -6687,7 +6688,7 @@ it is considered declared."
 ;; possibly other browsing mechanisms.
 
 ;; The basic strategy is to identify function assignment targets of the form
-;; `foo.bar.baz', convert them to (list foo bar baz <position>), and push the
+;; `foo.bar.baz', convert them to (list fn foo bar baz <position>), and push the
 ;; list into `js2-imenu-recorder'.  The lists are merged into a trie-like tree
 ;; for imenu after parsing is finished.
 
@@ -6736,13 +6737,14 @@ it is considered declared."
 ;; During parsing we accumulate an entry for each definition in
 ;; the variable `js2-imenu-recorder', like so:
 
-;; '((a 5)
-;;   (b 25)
-;;   (foo 100)
-;;   (foo bar 200)
-;;   (foo bar baz 300)
-;;   (foo bar zab 400))
+;; '((fn a 5)
+;;   (fn b 25)
+;;   (fn foo 100)
+;;   (fn foo bar 200)
+;;   (fn foo bar baz 300)
+;;   (fn foo bar zab 400))
 
+;; Where 'fn' is the respective function node.
 ;; After parsing these entries are merged into this alist-trie:
 
 ;; '((a . 1)
@@ -6772,7 +6774,7 @@ returns nil.  Otherwise returns the string name/value of the node."
     "this")))
 
 (defsubst js2-node-qname-component (node)
-  "Test function:  return the name of this node, if it contributes to a qname.
+  "Return the name of this node, if it contributes to a qname.
 Returns nil if the node doesn't contribute."
   (copy-sequence
    (or (js2-prop-node-name node)
@@ -6780,12 +6782,14 @@ Returns nil if the node doesn't contribute."
                 (js2-function-node-name node))
            (js2-name-node-name (js2-function-node-name node))))))
 
-(defsubst js2-record-function-qname (fn-node qname)
-  "Associate FN-NODE with its QNAME for later lookup.
-This is used in postprocessing the chain list.  When we find a chain
-whose first element is a js2-THIS keyword node, we look up the parent
-function and see (using this map) whether it is the tail of a chain.
-If so, we replace the this-node with a copy of the parent's qname."
+(defsubst js2-record-imenu-entry (fn-node qname pos)
+  "Add an entry to `js2-imenu-recorder'.
+FN-NODE should be the current item's function node.
+
+Associate FN-NODE with its QNAME for later lookup.
+This is used in postprocessing the chain list.  For each chain, we find
+the parent function, look up its qname, then prepend a copy of it to the chain."
+  (push (cons fn-node (append qname (list pos))) js2-imenu-recorder)
   (unless js2-imenu-function-map
     (setq js2-imenu-function-map (make-hash-table :test 'eq)))
   (puthash fn-node qname js2-imenu-function-map))
@@ -6802,17 +6806,13 @@ VAR, if non-nil, is the expression that NODE is being assigned to."
        ((and fun-p
              (not var)
              (setq fname-node (js2-function-node-name node)))
-        (push (setq qname (list fname-node (js2-node-pos node)))
-              js2-imenu-recorder)
-        (js2-record-function-qname node qname))
+        (js2-record-imenu-entry node (list fname-node) (js2-node-pos node)))
        ;; for remaining forms, compute left-side tree branch first
        ((and var (setq qname (js2-compute-nested-prop-get var)))
         (cond
          ;; foo.bar.baz = function
          (fun-p
-          (push (nconc qname (list (js2-node-pos node)))
-                js2-imenu-recorder)
-          (js2-record-function-qname node qname))
+          (js2-record-imenu-entry node qname (js2-node-pos node)))
          ;; foo.bar.baz = object-literal
          ;; look for nested functions:  {a: {b: function() {...} }}
          ((js2-object-node-p node)
@@ -6852,9 +6852,8 @@ NODE is an object literal that is the right-hand child of an assignment
 expression.  QNAME is a list of nodes representing the assignment target,
 e.g. for foo.bar.baz = {...}, QNAME is (foo-node bar-node baz-node).
 POS is the absolute position of the node.
-We do a depth-first traversal of NODE.  Any functions we find are prefixed
-with QNAME plus the property name of the function and appended to the
-variable `js2-imenu-recorder'."
+We do a depth-first traversal of NODE.  For any functions we find,
+we append the property name to QNAME, then call `js2-record-imenu-entry'."
   (let (left right prop-qname)
     (dolist (e (js2-object-node-elems node))  ; e is a `js2-object-prop-node'
       (let ((left (js2-infix-node-left e))
@@ -6867,9 +6866,7 @@ variable `js2-imenu-recorder'."
             ;; As a policy decision, we record the position of the property,
             ;; not the position of the `function' keyword, since the property
             ;; is effectively the name of the function.
-            (push (setq prop-qname (append qname (list left pos)))
-                  js2-imenu-recorder)
-            (js2-record-function-qname right prop-qname)))
+            (js2-record-imenu-entry right (append qname (list left)) pos)))
          ;; foo: {object-literal} -- add foo to qname, offset position, and recurse
          ((js2-object-node-p right)
           (js2-record-object-literal right
@@ -6908,45 +6905,38 @@ NODE must be `js2-function-node'."
                            '("call" "apply"))
                    (js2-call-node-p (js2-node-parent parent))))))))
 
-(defun js2-browse-postprocess-chains (chains)
+(defun js2-browse-postprocess-chains (entries)
   "Modify function-declaration name chains after parsing finishes.
 Some of the information is only available after the parse tree is complete.
-For instance, following a 'this' reference requires a parent function node."
-  (let ((js2-imenu-fn-type-map (make-hash-table :test 'eq))
-        result head fn fn-type parent-chain p elem parent)
-    (dolist (chain chains)
-      ;; examine the head of each node to get its defining scope
-      (setq head (car chain))
-      ;; if top-level/external, keep as-is
-      (if (js2-node-top-level-decl-p head)
-          (push chain result)
-        (cond
-         ;; starts with this-reference
-         ((js2-this-node-p head)
-          (setq fn (js2-node-parent-script-or-fn head)
-                chain (cdr chain))) ; discard this-node
-         ;; nested named function
-         ((js2-function-node-p (setq parent (js2-node-parent head)))
-          (setq fn (js2-node-parent-script-or-fn parent)))
-         ;; variable assigned a function expression
-         (t (setq fn (js2-node-parent-script-or-fn head))))
-        (when fn
-          (setq fn-type (gethash fn js2-imenu-fn-type-map))
-          (unless fn-type
-            (setq fn-type
-                  (cond ((js2-nested-function-p fn) 'skip)
-                        ((setq parent-chain
-                               (gethash fn js2-imenu-function-map))
-                         'named)
-                        ((js2-wrapper-function-p fn) 'anon)
-                        (t 'skip)))
-            (puthash fn fn-type js2-imenu-fn-type-map))
-          (case fn-type
-            ('anon (push chain result)) ; anonymous top-level wrapper
-            ('named                     ; top-level named function
-             ;; prefix parent fn qname, which is
-             ;; parent-chain sans last elem, to this chain.
-             (push (append (butlast parent-chain) chain) result))))))
+For instance, processing a nested scope requires a parent function node."
+  (let (result head fn current-fn parent-qname qname p elem)
+    (dolist (entry entries)
+      ;; function node goes first
+      (destructuring-bind (current-fn &rest (&whole chain head &rest)) entry
+        ;; examine its defining scope;
+        ;; if top-level/external, keep as-is
+        (if (js2-node-top-level-decl-p head)
+            (push chain result)
+          (when (js2-this-node-p head)
+            (setq chain (cdr chain))) ; discard this-node
+          (when (setq fn (js2-node-parent-script-or-fn current-fn))
+            (setq parent-qname (gethash fn js2-imenu-function-map 'not-found))
+            (when (eq parent-qname 'not-found)
+              ;; anonymous function expressions are not recorded
+              ;; during the parse, so we need to handle this case here
+              (setq parent-qname
+                    (if (js2-wrapper-function-p fn)
+                        (let ((grandparent (js2-node-parent-script-or-fn fn)))
+                          (if (js2-ast-root-p grandparent)
+                              nil
+                            (gethash grandparent js2-imenu-function-map 'skip)))
+                      'skip))
+              (puthash fn parent-qname js2-imenu-function-map))
+            (unless (eq parent-qname 'skip)
+              ;; prefix parent fn qname to this chain.
+              (let ((qname (append parent-qname chain)))
+                (puthash current-fn (butlast qname) js2-imenu-function-map)
+                (push qname result)))))))
     ;; finally replace each node in each chain with its name.
     (dolist (chain result)
       (setq p chain)
@@ -6982,7 +6972,7 @@ For instance, following a 'this' reference requires a parent function node."
 ;; a nested sub-alist element looks like (INDEX-NAME SUB-ALIST).
 ;; The sub-alist entries immediately follow INDEX-NAME, the head of the list.
 
-(defsubst js2-treeify (lst)
+(defun js2-treeify (lst)
   "Convert (a b c d) to (a ((b ((c d)))))"
   (if (null (cddr lst))  ; list length <= 2
       lst
@@ -7325,10 +7315,9 @@ leaving a statement, an expression, or a function definition."
         (max-specpdl-size (max max-specpdl-size 3000))
         (case-fold-search nil)
         ast)
-    (or buf (setq buf (current-buffer)))
     (message nil)  ; clear any error message from previous parse
     (save-excursion
-      (set-buffer buf)
+      (when buf (set-buffer buf))
       (setq js2-scanned-comments nil
             js2-parsed-errors nil
             js2-parsed-warnings nil
@@ -9893,10 +9882,12 @@ a comma)."
         (and (js-re-search-backward "\n" nil t)
 	     (progn
 	       (skip-chars-backward " \t")
-	       (backward-char)
-	       (and (js-looking-at-operator-p)
-		    (and (progn (backward-char)
-				(not (looking-at "\\*\\|++\\|--\\|/[/*]"))))))))))
+               (unless (bolp)
+                 (backward-char)
+                 (and (js-looking-at-operator-p)
+                      (and (progn
+                             (backward-char)
+                             (not (looking-at "\\*\\|++\\|--\\|/[/*]")))))))))))
 
 (defun js-end-of-do-while-loop-p ()
   "Returns non-nil if word after point is `while' of a do-while
@@ -9992,10 +9983,11 @@ returns nil."
 (defun js2-indent-in-array-comp (parse-status)
   "Return non-nil if we think we're in an array comprehension.
 In particular, return the buffer position of the first `for' kwd."
-  (let ((end (point)))
-    (when (nth 1 parse-status)
+  (let ((bracket (nth 1 parse-status))
+        (end (point)))
+    (when bracket
       (save-excursion
-        (goto-char (nth 1 parse-status))
+        (goto-char bracket)
         (when (looking-at "\\[")
           (forward-char 1)
           (js2-forward-sws)
@@ -10009,7 +10001,10 @@ In particular, return the buffer position of the first `for' kwd."
             ;; to skip arbitrary expressions we need the parser,
             ;; so we'll just guess at it.
             (if (and (> end (point)) ; not empty literal
-                     (re-search-forward "[^,]]* \\(for\\) " end t))
+                     (re-search-forward "[^,]]* \\(for\\) " end t)
+                     ;; not inside comment or string literal
+                     (let ((state (parse-partial-sexp bracket (point))))
+                       (not (or (nth 3 state) (nth 4 state)))))
                 (match-beginning 1))))))))
 
 (defun js2-array-comp-indentation (parse-status for-kwd)
@@ -10038,6 +10033,7 @@ In particular, return the buffer position of the first `for' kwd."
       (cond
        ;; indent array comprehension continuation lines specially
        ((and bracket
+             (>= js2-language-version 170)
              (not (js2-same-line bracket))
              (setq beg (js2-indent-in-array-comp parse-status))
              (>= (point) (save-excursion
@@ -10049,7 +10045,7 @@ In particular, return the buffer position of the first `for' kwd."
 
        ((and declaration-indent continued-expr-p)
         (+ declaration-indent js2-basic-offset))
-       
+
        (declaration-indent)
 
        (bracket
@@ -10281,10 +10277,10 @@ in reverse."
 
           ;; nesting-heuristic position, main by default
           (push (setq main-pos normal-col) positions)
-          
+
           ;; delete duplicates and sort positions list
           (setq positions (sort (delete-dups positions) '<))
-          
+
           ;; comma-list continuation lines:  prev line indent takes precedence
           (if same-indent
               (setq main-pos same-indent))
@@ -10297,10 +10293,10 @@ in reverse."
           ;; if bouncing backwards, reverse positions list
           (if backwards
               (setq positions (reverse positions)))
-          
+
           ;; record whether we're already sitting on one of the alternatives
           (setq pos (member cur-indent positions))
-          
+
           (cond
            ;; case 0:  we're one one of the alternatives and this is the
            ;; first time they've pressed TAB on this line (best-guess).
@@ -10322,7 +10318,7 @@ in reverse."
            ;; case 4:  on intermediate position:  cycle to next position
            (t
             (setq computed-pos (js2-position (second pos) positions))))
-          
+
           ;; see if any hooks want to indent; otherwise we do it
           (loop with result = nil
                 for hook in js2-indent-hook
@@ -10332,7 +10328,7 @@ in reverse."
                 finally do
                 (unless (or result (null computed-pos))
                   (indent-line-to (nth computed-pos positions)))))
-      
+
       ;; finally
       (if js2-mode-indent-inhibit-undo
           (setq buffer-undo-list old-buffer-undo-list))
@@ -10425,12 +10421,11 @@ If so, we don't ever want to use bounce-indent."
   (set (make-local-variable 'indent-region-function) #'js2-indent-region)
 
   ;; I tried an "improvement" to `c-fill-paragraph' that worked out badly
-  ;; on most platforms other than the one I originally wrote it on.  So it's
-  ;; back to `c-fill-paragraph'.  Still not perfect, though -- something to do
-  ;; with our binding of the RET key inside comments:  short lines stay short.
+  ;; on most platforms other than the one I originally wrote it on.
+  ;; So it's back to `c-fill-paragraph'.
   (set (make-local-variable 'fill-paragraph-function) #'c-fill-paragraph)
 
-  (set (make-local-variable 'before-save-hook) #'js2-before-save)
+  (add-hook 'before-save-hook #'js2-before-save nil t)
   (set (make-local-variable 'next-error-function) #'js2-next-error)
   (set (make-local-variable 'beginning-of-defun-function) #'js2-beginning-of-defun)
   (set (make-local-variable 'end-of-defun-function) #'js2-end-of-defun)
@@ -10443,15 +10438,24 @@ If so, we don't ever want to use bounce-indent."
   (put 'js2-mode 'find-tag-default-function #'js2-mode-find-tag)
 
   ;; some variables needed by cc-engine for paragraph-fill, etc.
-  (setq c-buffer-is-cc-mode t
-        c-comment-prefix-regexp js2-comment-prefix-regexp
+  (setq c-comment-prefix-regexp js2-comment-prefix-regexp
         c-comment-start-regexp "/[*/]\\|\\s|"
+        c-line-comment-starter "//"
         c-paragraph-start js2-paragraph-start
         c-paragraph-separate "$"
         comment-start-skip js2-comment-start-skip
         c-syntactic-ws-start js2-syntactic-ws-start
         c-syntactic-ws-end js2-syntactic-ws-end
         c-syntactic-eol js2-syntactic-eol)
+
+  (let ((c-buffer-is-cc-mode t))
+    ;; Copied from `js-mode'.  Also see Bug#6071.
+    (make-local-variable 'paragraph-start)
+    (make-local-variable 'paragraph-separate)
+    (make-local-variable 'paragraph-ignore-fill-prefix)
+    (make-local-variable 'adaptive-fill-mode)
+    (make-local-variable 'adaptive-fill-regexp)
+    (c-setup-paragraph-variables))
 
   (setq js2-default-externs
         (append js2-ecma-262-externs
@@ -10464,17 +10468,9 @@ If so, we don't ever want to use bounce-indent."
 
   ;; We do our own syntax highlighting based on the parse tree.
   ;; However, we want minor modes that add keywords to highlight properly
-  ;; (examples:  doxymacs, column-marker).  We do this by not letting
-  ;; font-lock unfontify anything, and telling it to fontify after we
-  ;; re-parse and re-highlight the buffer.  (We currently don't do any
-  ;; work with regions other than the whole buffer.)
-  (dolist (var '(font-lock-unfontify-buffer-function
-                 font-lock-unfontify-region-function))
-    (set (make-local-variable var) (lambda (&rest args) t)))
-
-  ;; Don't let font-lock do syntactic (string/comment) fontification.
-  (set (make-local-variable #'font-lock-syntactic-face-function)
-       (lambda (state) nil))
+  ;; (examples:  doxymacs, column-marker).
+  ;; To customize highlighted keywords, use `font-lock-add-keywords'.
+  (setq font-lock-defaults '(nil t))
 
   ;; Experiment:  make reparse-delay longer for longer files.
   (if (plusp js2-dynamic-idle-timer-adjust)
@@ -10491,15 +10487,16 @@ If so, we don't ever want to use bounce-indent."
   (add-to-invisibility-spec '(js2-outline . t))
   (set (make-local-variable 'line-move-ignore-invisible) t)
   (set (make-local-variable 'forward-sexp-function) #'js2-mode-forward-sexp)
+
+  (if (fboundp 'run-mode-hooks)
+      (run-mode-hooks 'js2-mode-hook)
+    (run-hooks 'js2-mode-hook))
+
   (setq js2-mode-functions-hidden nil
         js2-mode-comments-hidden nil
         js2-mode-buffer-dirty-p t
         js2-mode-parsing nil)
-  (js2-reparse)
-
-  (if (fboundp 'run-mode-hooks)
-      (run-mode-hooks 'js2-mode-hook)
-    (run-hooks 'js2-mode-hook)))
+  (js2-reparse))
 
 (defun js2-mode-exit ()
   "Exit `js2-mode' and clean up."
@@ -10543,7 +10540,7 @@ it to be reparsed when the buffer is selected."
     (with-current-buffer buffer
       (add-hook 'window-configuration-change-hook
                 #'js2-mode-idle-reparse-inner
-                t))))
+                nil t))))
 
 (defun js2-mode-idle-reparse-inner ()
   (remove-hook 'window-configuration-change-hook
@@ -10566,23 +10563,6 @@ if the edit occurred on a line different from the magic paren."
   (setq js2-mode-buffer-dirty-p t)
   (js2-mode-hide-overlay)
   (js2-mode-reset-timer))
-
-(defun js2-mode-run-font-lock ()
-  "Run `font-lock-fontify-buffer' after parsing/highlighting.
-This is intended to allow modes that install their own font-lock keywords
-to work with js2-mode.  In practice it never seems to work for long.
-Hopefully the Emacs maintainers can help figure out a way to make it work."
-  (when (and (boundp 'font-lock-keywords)
-             font-lock-keywords
-             (boundp 'font-lock-mode)
-             font-lock-mode)
-    ;; TODO:  font-lock and jit-lock really really REALLY don't want to
-    ;; play nicely with js2-mode.  They go out of their way to fail to
-    ;; provide any option for saying "look, fontify the farging buffer
-    ;; with just the keywords already".  Argh.
-    (setq font-lock-defaults (list font-lock-keywords 'keywords-only))
-    (let (font-lock-verbose)
-      (font-lock-fontify-buffer))))
 
 (defun js2-reparse (&optional force)
   "Re-parse current buffer after user finishes some data entry.
@@ -10616,7 +10596,6 @@ buffer will only rebuild its `js2-mode-ast' if the buffer is dirty."
                              (js2-mode-remove-suppressed-warnings)
                              (js2-mode-show-warnings)
                              (js2-mode-show-errors)
-                             (js2-mode-run-font-lock)  ; note:  doesn't work
                              (js2-mode-highlight-magic-parens)
                              (if (>= js2-highlight-level 1)
                                  (js2-highlight-jsdoc js2-mode-ast))
@@ -10646,7 +10625,7 @@ buffer will only rebuild its `js2-mode-ast' if the buffer is dirty."
         (if js2-mode-node-overlay
             (move-overlay js2-mode-node-overlay beg end)
           (setq js2-mode-node-overlay (make-overlay beg end))
-          (overlay-put js2-mode-node-overlay 'face 'highlight))
+          (overlay-put js2-mode-node-overlay 'font-lock-face 'highlight))
         (js2-with-unmodifying-text-property-changes
           (put-text-property beg end 'point-left #'js2-mode-hide-overlay))
         (message "%s, parent: %s"
@@ -10687,7 +10666,7 @@ E is a list of ((MSG-KEY MSG-ARG) BEG END)."
          (end (max (point-min) (min end (point-max))))
          (js2-highlight-level 3)    ; so js2-set-face is sure to fire
          (ovl (make-overlay beg end)))
-    (overlay-put ovl 'face face)
+    (overlay-put ovl 'font-lock-face face)
     (overlay-put ovl 'js2-error t)
     (put-text-property beg end 'help-echo (js2-get-msg key))
     (put-text-property beg end 'point-entered #'js2-echo-error)))
@@ -10716,7 +10695,7 @@ Defaults to point."
     ;; Have to reverse the recorded fontifications list so that errors
     ;; and warnings overwrite the normal fontifications.
     (dolist (f (nreverse js2-mode-fontifications))
-      (put-text-property (first f) (second f) 'face (third f)))
+      (put-text-property (first f) (second f) 'font-lock-face (third f)))
     (setq js2-mode-fontifications nil))
   (dolist (p js2-mode-deferred-properties)
     (apply #'put-text-property p))
@@ -10765,7 +10744,8 @@ This ensures that the counts and `next-error' are correct."
 (defun js2-echo-error (old-point new-point)
   "Called by point-motion hooks."
   (let ((msg (get-text-property new-point 'help-echo)))
-    (if msg
+    (if (and msg (or (not (current-message))
+                     (string= (current-message) "Quit")))
         (message msg))))
 
 (defalias #'js2-echo-help #'js2-echo-error)
@@ -10779,7 +10759,9 @@ This ensures that the counts and `next-error' are correct."
     (cond
      ;; check if we're inside a string
      ((nth 3 parse-status)
-      (js2-mode-split-string parse-status))
+      (if js2-concat-multiline-strings
+          (js2-mode-split-string parse-status)
+        (insert "\n")))
      ;; check if inside a block comment
      ((nth 4 parse-status)
       (js2-mode-extend-comment))
@@ -10798,6 +10780,7 @@ PARSE-STATUS is as documented in `parse-partial-sexp'."
          (quote-char (nth 3 parse-status))
          (quote-string (string quote-char))
          (string-beg (nth 8 parse-status))
+         (at-eol (eq js2-concat-multiline-strings 'eol))
          (indent (save-match-data
                    (or
                     (save-excursion
@@ -10809,9 +10792,15 @@ PARSE-STATUS is as documented in `parse-partial-sexp'."
                       (if (looking-back "\\+\\s-+")
                           (goto-char (match-beginning 0)))
                       (current-column))))))
-    (insert quote-char "\n")
+    (insert quote-char)
+    (if at-eol
+        (insert " +\n")
+      (insert "\n"))
+    ;; FIXME: This does not match the behavior of `js2-indent-line'.
     (indent-to indent)
-    (insert "+ " quote-string)
+    (unless at-eol
+      (insert "+ "))
+    (insert quote-string)
     (when (eolp)
       (insert quote-string)
       (backward-char 1))))
@@ -10942,7 +10931,7 @@ Actually returns the quote character that begins the string."
 Sets value of `js2-magic' text property to line number at POS."
   (propertize delim
               'js2-magic (line-number-at-pos pos)
-              'face 'js2-magic-paren-face))
+              'font-lock-face 'js2-magic-paren-face))
 
 (defun js2-mode-match-delimiter (open close)
   "Insert OPEN (a string) and possibly matching delimiter CLOSE.
@@ -11040,7 +11029,7 @@ already have been inserted."
       (if (get-text-property beg 'js2-magic)
           (js2-with-unmodifying-text-property-changes
             (put-text-property beg (or end (1+ beg))
-                               'face 'js2-magic-paren-face))))))
+                               'font-lock-face 'js2-magic-paren-face))))))
 
 (defun js2-mode-mundanify-parens ()
   "Clear all magic parens and brackets."
@@ -11557,29 +11546,45 @@ Parent is defined as the enclosing script or function."
     (when (setq sib (js2-node-find-child-before (point) parent))
       (goto-char (js2-node-abs-pos sib)))))
 
-(defun js2-beginning-of-defun ()
-  "Go to line on which current function starts, and return non-nil.
-If we're not in a function, go to beginning of previous script-level element."
-  (interactive)
-  (let ((parent (js2-node-parent-script-or-fn (js2-node-at-point)))
-        pos sib)
-    (cond
-     ((and (js2-function-node-p parent)
-           (not (eq (point) (setq pos (js2-node-abs-pos parent)))))
-      (goto-char pos))
-     (t
-      (js2-mode-backward-sibling)))))
+(defun js2-beginning-of-defun (&optional arg)
+  "Go to line on which current function starts, and return t on success.
+If we're not in a function or already at the beginning of one, go
+to beginning of previous script-level element.
+With ARG N, do that N times. If N is negative, move forward."
+  (setq arg (or arg 1))
+  (if (plusp arg)
+      (let ((parent (js2-node-parent-script-or-fn (js2-node-at-point))))
+        (when (cond
+               ((js2-function-node-p parent)
+                (goto-char (js2-node-abs-pos parent)))
+               (t
+                (js2-mode-backward-sibling)))
+          (if (> arg 1)
+              (js2-beginning-of-defun (1- arg))
+            t)))
+    (when (js2-end-of-defun)
+      (if (>= arg -1)
+          (js2-beginning-of-defun 1)
+        (js2-beginning-of-defun (1+ arg))))))
 
 (defun js2-end-of-defun ()
-  "Go to the char after the last position of the current function.
-If we're not in a function, skips over the next script-level element."
-  (interactive)
-  (let ((parent (js2-node-parent-script-or-fn (js2-node-at-point))))
-    (if (not (js2-function-node-p parent))
-        ;; punt:  skip over next script-level element beyond point
-        (js2-mode-forward-sibling)
-      (goto-char (+ 1 (+ (js2-node-abs-pos parent)
-                         (js2-node-len parent)))))))
+  "Go to the char after the last position of the current function
+or script-level element."
+  (let* ((node (js2-node-at-point))
+         (parent (or (and (js2-function-node-p node) node)
+                     (js2-node-parent-script-or-fn node)))
+         script)
+    (unless (js2-function-node-p parent)
+      ;; use current script-level node, or, if none, the next one
+      (setq script (or parent node))
+      (setq parent (js2-node-find-child-before (point) script))
+      (when (or (null parent)
+                (>= (point) (+ (js2-node-abs-pos parent)
+                               (js2-node-len parent))))
+        (setq parent (js2-node-find-child-after (point) script))))
+    (when parent
+      (goto-char (+ (js2-node-abs-pos parent)
+                    (js2-node-len parent))))))
 
 (defun js2-mark-defun (&optional allow-extend)
   "Put mark at end of this function, point at beginning.

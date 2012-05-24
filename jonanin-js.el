@@ -8,10 +8,16 @@
 (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
 
 ;; customizations
-(setq js2-pretty-multiline-decl-indentation-p t
-      js2-consistent-level-indent-inner-bracket-p t
-      js2-enter-indents-newline t
-      js2-mirror-mode t
-      js2-global-externs '("require" "console" "$" "module" "__dirname" "process"))
+(add-hook 'js2-mode-hook
+ '(lambda ()
+    (setq js2-pretty-multiline-decl-indentation-p t
+          js2-consistent-level-indent-inner-bracket-p t
+          js2-enter-indents-newline t
+          js2-mirror-mode t
+          js2-cleanup-whitespace t
+          js2-global-externs '("require" "console" "$" "exports"
+                               "module" "__dirname" "process"))
+    ))
+
 
 (provide 'jonanin-js)
