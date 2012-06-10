@@ -32,10 +32,8 @@
 (setq uniquify-buffer-name-style 'forward)
 
 ;; color theme
-(require 'color-theme)
-(require 'color-theme-zenburn)
-(setq color-theme-is-global t)
-(color-theme-zenburn)
+(add-to-list 'custom-theme-load-path (concat dotfiles-dir "themes/"))
+(load-theme 'zenburn t)
 
 ;; Ido-mode
 (ido-mode t)

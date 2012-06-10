@@ -38,6 +38,9 @@
 
 ;;; Commentary:
 
+;; Thanks to d87 <github.com/d87> for an idea of highlighting lua
+;; builtins/numbers
+
 ;; Thanks to Vedat Hallac <github.com/vhallac> for sharing some of
 ;; his fixes and updates to core indentation logics
 
@@ -238,8 +241,10 @@ traceback location."
   :type 'boolean
   :group 'lua)
 
-(defvar lua-mode-hook nil
-  "Hooks called when Lua mode fires up.")
+(defcustom lua-mode-hook nil
+  "Hooks called when Lua mode fires up."
+  :type 'hook
+  :group 'lua)
 
 (defvar lua-region-start (make-marker)
   "Start of special region for Lua communication.")
@@ -264,6 +269,74 @@ traceback location."
     ["Search Documentation" lua-search-documentation t])
   "Emacs menu for Lua mode.")
 
+(defconst
+  lua--builtins
+  (eval-and-compile
+    (let*
+        ((modules
+          '("_G" "_VERSION" "assert" "collectgarbage" "dofile" "error" "getfenv" "getmetatable"
+            "ipairs" "load" "loadfile" "loadstring" "module" "next" "pairs" "pcall" "print"
+            "rawequal" "rawget" "rawlen" "rawset" "require" "select" "setfenv" "setmetatable"
+            "tonumber" "tostring" "type" "unpack" "xpcall"
+            ("bit32" . ("arshift" "band" "bnot" "bor" "btest" "bxor" "extract" "lrotate" "lshift"
+                        "replace" "rrotate" "rshift"))
+            ("coroutine" . ("create" "resume" "running" "status" "wrap" "yield"))
+            ("debug" . ("debug" "getfenv" "gethook" "getinfo" "getlocal" "getmetatable"
+                        "getregistry" "getupvalue" "getuservalue" "setfenv" "sethook" "setlocal"
+                        "setmetatable" "setupvalue" "setuservalue" "traceback" "upvalueid"
+                        "upvaluejoin"))
+            ("io" . ("close" "flush" "input" "lines" "open" "output" "popen" "read" "stderr"
+                     "stdin" "stdout" "tmpfile" "type" "write"))
+            ("math" . ("abs" "acos" "asin" "atan" "atan2" "ceil" "cos" "cosh" "deg" "exp" "floor"
+                       "fmod" "frexp" "huge" "ldexp" "log" "log10" "max" "min" "modf" "pi" "pow"
+                       "rad" "random" "randomseed" "sin" "sinh" "sqrt" "tan" "tanh"))
+            ("os" . ("clock" "date" "difftime" "execute" "exit" "getenv" "remove" "rename"
+                     "setlocale" "time" "tmpname"))
+            ("package" . ("config" "cpath" "loaded" "loaders" "loadlib" "path" "preload"
+                          "searchers" "searchpath" "seeall"))
+            ("string" . ("byte" "char" "dump" "find" "format" "gmatch" "gsub" "len" "lower"
+                         "match" "rep" "reverse" "sub" "upper"))
+            ("table" . ("concat" "insert" "maxn" "pack" "remove" "sort" "unpack")))))
+
+      ;; This code uses \\< and \\> to delimit builtin symbols instead of
+      ;; \\_< and \\_>, because -- a necessity -- '.' syntax class is hacked
+      ;; to 'symbol' and \\_> won't detect a symbol boundary in 'foo.bar' and
+      ;; -- sufficiency -- conveniently, underscore '_' is hacked to count as
+      ;; word constituent, but only for font-locking. Neither of these hacks
+      ;; makes sense to me, I'm going to wipe them out as soon as I'm sure
+      ;; that indentation won't get hurt. --immerrr
+      ;;
+      (flet
+          ((module-name-re (x)
+                           (concat "\\(?1:\\<"
+                                   (if (listp x) (car x) x)
+                                   "\\>\\)"))
+           (module-members-re (x) (if (listp x)
+                                      (concat "\\(?:[ \t]*\\.[ \t]*"
+                                              "\\<\\(?2:"
+                                              (regexp-opt (cdr x))
+                                              "\\)\\>\\)?")
+                                    "")))
+
+        (concat
+         ;; common prefix - beginning-of-line or neither of [ '.', ':' ] to
+         ;; exclude "foo.string.rep"
+         "\\(?:\\`\\|[^:. \n\t]\\)"
+         ;; optional whitespace
+         "[ \n\t]*"
+         "\\(?:"
+         ;; any of modules/functions
+         (mapconcat (lambda (x) (concat (module-name-re x)
+                                        (module-members-re x)))
+                    modules
+                    "\\|")
+         "\\)"))))
+
+  "A regexp that matches lua builtin functions & variables.
+
+This is a compilation of 5.1 and 5.2 builtins taken from the
+index of respective Lua reference manuals.")
+
 (defvar lua-font-lock-keywords
   (eval-when-compile
     (list
@@ -279,9 +352,27 @@ traceback location."
      '("^[ \t]*\\_<\\(\\(local[ \t]+\\)?function\\)\\_>[ \t]+\\(\\(\\sw:\\|\\sw\\.\\|\\sw_\\|\\sw\\)+\\)"
        (1 font-lock-keyword-face) (3 font-lock-function-name-face nil t))
 
+     ;; Highlight lua builtin functions and variables
+     `(,lua--builtins
+           (1 font-lock-builtin-face) (2 font-lock-builtin-face nil noerror))
+
      ;; Handle function names in assignments
      '("\\(\\(\\sw:\\|\\sw\\.\\|\\sw_\\|\\sw\\)+\\)[ \t]*=[ \t]*\\(function\\)\\_>"
        (1 font-lock-function-name-face nil t) (3 font-lock-keyword-face))
+
+     ;; octal numbers
+     '("\\_<0x[[:xdigit:]]+\\_>" . font-lock-constant-face)
+
+     ;; regular numbers
+     ;;
+     ;; This regexp relies on '.' being symbol constituent. Whenever this
+     ;; changes, the regexp needs revisiting --immerrr
+     `(,(concat "\\_<\\(?1:"
+                ;; make a digit on either side of dot mandatory
+                "\\(?:[0-9]+\\.?[0-9]*\\|[0-9]*\\.?[0-9]+\\)"
+                "\\(?:[eE][+-]?[0-9]+\\)?"
+                "\\)\\_>")
+       . font-lock-constant-face)
 
      ;; Keywords.
      (concat "\\_<"
@@ -849,31 +940,30 @@ use standalone."
                       ;; end of a block matched
                       (- lua-indent-level))))))
 
-(defun lua-cleanup-indentation-info (info)
-  "Cleanup the list of indentation information.
-There are two tokens that cause list cleanup: remove-matching,
-and replace matching. These tokens are considered cleanup tokens.
+(defun  lua-add-indentation-info-pair (pair info)
+  "Add the given indentation info pair to the list of indentation information.
+This function has special case handling for two tokens: remove-matching,
+and replace-matching. These two tokens are cleanup tokens that remove or
+alter the effect of a previously recorded indentation info.
 
-When a remove-matching token is found, the next non cleanup token
-is removed from list.
+When a remove-matching token is encountered, the last recorded info, i.e.
+the car of the list is removed. This is used to roll-back an indentation of a
+block opening statement when it is closed.
 
-When a replace-matching token is found, the next non-cleanup
-token is removed from the list, and the cdr of the
-replace-matching token is inserted in its place."
-  (let (value
-        (erase-count 0))
-    (dolist (elt info value)
-      (cond
-       ( (eq 'remove-matching (car elt))
-         (setq erase-count (1+ erase-count)))
-       ( (eq 'replace-matching (car elt))
-         (setq value (cons (cdr elt) value))
-         (setq erase-count (1+ erase-count)))
-       ( t
-         (if (= erase-count 0)
-             (setq value (cons elt value))
-           (setq erase-count (1- erase-count))))))
-    (reverse value)))
+When a replace-matching token is seen, the last recorded info is removed,
+and the cdr of the replace-matching info is added in its place. This is used
+when a middle-of the block (the only case is 'else') is seen on the same line
+the block is opened."
+  (cond
+   ( (eq 'remove-matching (car pair))
+     ; Remove head of list
+     (cdr info))
+   ( (eq 'replace-matching (car pair))
+     ; remove head of list, and add the cdr of pair instead
+     (cons (cdr pair) (cdr info)))
+   ( t
+     ; Just add the pair
+     (cons pair info))))
 
 (defun lua-calculate-indentation-info (&optional parse-start parse-end)
   "For each block token on the line, computes how it affects the indentation.
@@ -901,10 +991,11 @@ and relative each, and the shift/column to indent to."
                 (found-end (match-end 0))
                 (data (match-data)))
             (setq indentation-info
-                  (cons (lua-make-indentation-info-pair found-token found-pos) indentation-info))))
-
-        (or (and indentation-info (lua-cleanup-indentation-info indentation-info))
-            (list (cons 'absolute start-indentation)))))))
+		  (lua-add-indentation-info-pair
+		   (lua-make-indentation-info-pair found-token found-pos)
+		   indentation-info))))
+	(or indentation-info
+	    (list (cons 'absolute start-indentation)))))))
 
 (defun lua-accumulate-indentation-info (info)
   "Accumulates the indentation information previously calculated by
@@ -1184,7 +1275,7 @@ t, otherwise return nil.  BUF must exist."
       (if (not (eq major-mode 'lua-mode))
           (lua-mode))
       ;; FIXME: fix offset when executing region
-      (goto-line line)
+      (goto-char (point-min)) (forward-line (1- line))
       (message "Jumping to error in file %s on line %d" file line))))
 
 (defun lua-prompt-line ()
@@ -1323,23 +1414,24 @@ left out."
 (define-key lua-mode-menu [search-documentation]
   '("Search Documentation" . lua-search-documentation))
 
-;; Emacs 23.3 introduced with-silent-modifications macro
-;; use it if it's available, otherwise define a replacement for that
-(if (fboundp 'with-silent-modifications)
-    (defalias 'lua-with-silent-modifications 'with-silent-modifications)
+(eval-and-compile
+  ;; Emacs 23.3 introduced with-silent-modifications macro
+  ;; use it if it's available, otherwise define a replacement for that
+  (if (fboundp 'with-silent-modifications)
+      (defalias 'lua-with-silent-modifications 'with-silent-modifications)
 
-  (defmacro lua-with-silent-modifications (body)
-    "Execute BODY, pretending it does not modifies the buffer.
+    (defmacro lua-with-silent-modifications (&rest body)
+      "Execute BODY, pretending it does not modifies the buffer.
 
 This is a reimplementation of macro `with-silent-modifications'
 for Emacsen that doesn't contain one (pre-23.3)."
-    (let ((old-modified-p (buffer-modified-p))
-          (inhibit-modification-hooks t)
-          (buffer-undo-list t))
+      `(let ((old-modified-p (buffer-modified-p))
+            (inhibit-modification-hooks t)
+            (buffer-undo-list t))
 
-      (unwind-protect
-          ,@body
-        (set-buffer-modified-p old-modified-p)))))
+        (unwind-protect
+            ,@body
+          (set-buffer-modified-p old-modified-p))))))
 
 (defsubst lua-put-char-property (pos property value &optional object)
   (lua-with-silent-modifications
