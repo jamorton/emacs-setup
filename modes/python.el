@@ -58,5 +58,3 @@
 ;;(add-hook 'find-file-hook 'flymake-find-file-hook)
 
 (add-to-list 'auto-mode-alist '("wscript$" . python-mode))
-
-(provide 'jonanin-python)

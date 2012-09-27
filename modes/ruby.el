@@ -9,5 +9,3 @@
   (lambda ()
 	(local-set-key (kbd "RET") 'newline-and-indent)
 	))
-
-(provide 'jonanin-ruby)

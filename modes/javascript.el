@@ -18,6 +18,3 @@
           js2-global-externs '("require" "console" "$" "exports"
                                "module" "__dirname" "process"))
     ))
-
-
-(provide 'jonanin-js)
