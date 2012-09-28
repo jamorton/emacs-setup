@@ -22,4 +22,7 @@
 ;; mac keys
 (setq mac-command-modifier 'control)
 
+;; make sure there is always a newline at the end of the file
+(setq require-final-newline t)
+
 (provide 'jonanin-input)
