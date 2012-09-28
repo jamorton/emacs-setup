@@ -4,6 +4,8 @@
 
 
 (add-hook 'c-mode-common-hook (lambda ()
+  (make-local-variable 'indent-tabs-mode)
+  (set 'indent-tabs-mode nil)
   (c-set-offset 'innamespace 0)
   (c-set-offset 'substatement-open 0)
   (c-set-offset 'arglist-intro '+)

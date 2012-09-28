@@ -26,8 +26,3 @@
 ;; Load mode configs
 (mapc 'load
       (directory-files (concat dotfiles-dir "modes/") 't "^[^#].*el$"))
-
-(add-hook 'c-mode-common-hook '(lambda ()
-  (make-local-variable 'indent-tabs-mode)
-  (set 'indent-tabs-mode nil)
-  ))
