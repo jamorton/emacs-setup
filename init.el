@@ -11,6 +11,7 @@
 (add-to-list 'load-path (concat dotfiles-dir "extra/"))
 (add-to-list 'load-path (concat dotfiles-dir "extra/magit/"))
 (add-to-list 'load-path (concat dotfiles-dir "extra/rust/"))
+(add-to-list 'load-path (concat dotfiles-dir "extra/haskell-mode/"))
 
 ;; Byte-compile everything
 (setq max-specpdl-size 20000)

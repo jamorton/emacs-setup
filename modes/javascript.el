@@ -16,5 +16,6 @@
           js2-mirror-mode t
           js2-cleanup-whitespace t
           js2-global-externs '("require" "console" "$" "exports"
-                               "module" "__dirname" "process"))
+                               "module" "__dirname" "process"
+                               "clearInterval" "setInterval" "setTimeout"))
     ))

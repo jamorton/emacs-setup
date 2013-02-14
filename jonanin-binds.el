@@ -5,5 +5,8 @@
 ;; Magit
 (global-set-key (kbd "C-x g") 'magit-status)
 
-(provide 'jonanin-binds)
+(setq compilation-read-command nil)
+(setq compilation-ask-about-save nil)
+(global-set-key (kbd "C-x c") 'compile)
 
+(provide 'jonanin-binds)

@@ -18,8 +18,8 @@
 
 ;; Paren matching
 (show-paren-mode 1)
-(setq show-paren-style 'expression)
-(setq show-paren-delay 0)
+(setq-default show-paren-style 'expression)
+(setq-default show-paren-delay 0)
 
 ;; Column numbers
 (column-number-mode 1)
@@ -37,10 +37,10 @@
 
 ;; Ido-mode
 (ido-mode t)
-(setq ido-enable-prefix nil
+(setq-default ido-enable-prefix nil
       ido-enable-flex-matching t
       ido-create-new-buffer 'always
-      ido-use-filename-at-point 'guess
+      ido-use-filename-at-point nil
       ido-max-prospects 10)
 
 ;; no splash
