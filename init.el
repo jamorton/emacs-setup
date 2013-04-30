@@ -18,12 +18,26 @@
 (setq max-lisp-eval-depth 50000)
 (byte-recompile-directory dotfiles-dir 0)
 
+(require 'package)
+(add-to-list 'package-archives
+             '("melpa" . "http://melpa.milkbox.net/packages/") t)
+(package-initialize)
+
+(setq exec-path (cons "/usr/local/bin" exec-path))
+(setq exec-path (cons "/usr/local/share/python" exec-path))
+
+(add-hook 'after-init-hook #'global-flycheck-mode)
+
 ;; Load core stuff
 (require 'jonanin)
 (require 'jonanin-interface)
 (require 'jonanin-input)
 (require 'jonanin-binds)
 
-;; Load mode configs
-(mapc 'load
-      (directory-files (concat dotfiles-dir "modes/") 't "^[^#].*el$"))
+(add-hook 'after-init-hook
+  (lambda ()
+    (mapc 'load
+          (directory-files (concat dotfiles-dir "modes/") 't "^[^#].*el$"))
+  ))
+
+(provide 'init)
