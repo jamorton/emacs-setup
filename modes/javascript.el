@@ -18,5 +18,5 @@
           js2-global-externs '("require" "console" "$" "exports"
                                "module" "__dirname" "process"
                                "clearInterval" "setInterval" "setTimeout"
-                               "Backbone"))
+                               "Backbone" "_"))
     ))
