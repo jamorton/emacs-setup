@@ -5,7 +5,7 @@
 ;;       Daniel Hackney
 ;;       Daniel Evans
 ;;
-;; Version: 1.3
+;; Version: 1.4
 
 ;; This file is not part of Emacs
 
@@ -42,6 +42,38 @@
 
 (eval-when-compile
   (require 'font-lock))
+
+
+(defgroup handlebars nil
+  ""
+  :group 'languages)
+
+(defface handlebars-mode-section-face
+  '((t (:inherit font-lock-keyword-face)))
+  ""
+  :group 'handlebars)
+
+(defface handlebars-mode-comment-face
+  '((t (:inherit font-lock-comment-face)))
+  ""
+  :group 'handlebars)
+
+(defface handlebars-mode-include-face
+  '((t (:inherit font-lock-function-name-face)))
+  ""
+  :group 'handlebars)
+
+(defface handlebars-mode-builtins-face
+  '((t (:inherit font-lock-variable-name-face)))
+  ""
+  :group 'handlebars)
+
+(defface handlebars-mode-variable-face
+  '((t (:inherit font-lock-constant-face)))
+  ""
+  :group 'handlebars)
+
+
 
 (defvar handlebars-mode-version "1.3"
   "Version of `handlebars-mode.el'.")
@@ -91,6 +123,13 @@
 (defconst handlebars-mode-variable (concat "\\({{{?\s*"
                                     handlebars-mode-handlebars-token
                                     "\s*}}}?\\)"))
+(defconst handlebars-mode-else (concat "\\({{\s*else\s*}}\\)"))
+(defconst handlebars-mode-variable-path (concat "\\({{\s*./\s*"
+                                    handlebars-mode-handlebars-token
+                                    "\s*}}\\)"))
+(defconst handlebars-mode-variable-path-parent (concat "\\({{\s*../\s*"
+                                    handlebars-mode-handlebars-token
+                                    "\s*}}\\)"))
 (defconst handlebars-mode-builtins
   (concat
    "\\({{\\<\s*"
@@ -119,7 +158,7 @@
       "noscript" "object" "ol" "optgroup" "option" "p" "pre" "q"
       "s" "samp" "script" "select" "small" "span" "strike"
       "strong" "style" "sub" "sup" "table" "tbody" "td" "textarea"
-      "tfoot" "th" "thead" "title" "tr" "tt" "u" "ul" "var")
+      "tfoot" "th" "thead" "title" "tr" "tt" "u" "ul" "var" "aside")
     t)
    "\\>"))
 (defconst handlebars-mode-standalone-tag
@@ -139,6 +178,7 @@
                                               handlebars-mode-close-tag))
 
 (defconst handlebars-mode-blank-line "^[ \t]*?$")
+(defconst handlebars-mode-else-line "^[ \t]*?{{[ \t]*?else[ \t]*?}}")
 (defconst handlebars-mode-dangling-open (concat "\\("
                                          handlebars-mode-open-section
                                          "\\)\\|\\("
@@ -188,6 +228,7 @@
                   open-token "{{#")
           (setq close-at-start handlebars-mode-close-tag-at-start
                 open-token "<"))
+
         ;; If there is a closing tag at the start of the line, search back
         ;; for its opener and indent to that level.
         (if (looking-at close-at-start)
@@ -198,7 +239,7 @@
                 ;; the tag-stack is 0.
                 (while (and (not (bobp))
                             (> tag-stack 0)
-                            (re-search-backward (concat open-token
+                            (re-search-backward (concat (replace-regexp-in-string "{{#" "{{#?" open-token)
                                                         "\\(/?\\)"
                                                         close-tag) nil t))
                   (if (string-equal (match-string 1) "/")
@@ -219,19 +260,27 @@
                      (forward-line -1)
                      (and (not (bobp)) (looking-at handlebars-mode-blank-line))))
             (setq cur-indent (current-indentation))
-            (if (re-search-forward handlebars-mode-dangling-open old-pnt t)
+            (if (or (re-search-forward handlebars-mode-dangling-open old-pnt t) (looking-at handlebars-mode-else-line))
                 (setq cur-indent (+ cur-indent handlebars-basic-offset)))))
+
+        ;; Reduce the indentation by one level if it is an else tag.
+        (if (looking-at handlebars-mode-else-line)
+            (setq cur-indent (- cur-indent handlebars-basic-offset)))
+
         ;; Finally, we execute the actual indentation.
         (if (> cur-indent 0)
             (indent-line-to cur-indent)
           (indent-line-to 0))))))
 
 (defconst handlebars-mode-font-lock-keywords
-  `((,handlebars-mode-section (1 font-lock-keyword-face))
-    (,handlebars-mode-comment (1 font-lock-comment-face))
-    (,handlebars-mode-include (1 font-lock-function-name-face))
-    (,handlebars-mode-builtins (1 font-lock-variable-name-face))
-    (,handlebars-mode-variable (1 font-lock-reference-face))
+  `((,handlebars-mode-section (1 'handlebars-mode-section-face))
+    (,handlebars-mode-else (1 'handlebars-mode-section-face))
+    (,handlebars-mode-comment (1 'handlebars-mode-comment-face))
+    (,handlebars-mode-include (1 'handlebars-mode-include-face))
+    (,handlebars-mode-builtins (1 'handlebars-mode-builtins-face))
+    (,handlebars-mode-variable (1 font-lock-constant-face))
+    (,handlebars-mode-variable-path (1 font-lock-constant-face))
+    (,handlebars-mode-variable-path-parent (1 font-lock-constant-face))
     (,(concat "</?\\(" handlebars-mode-pair-tag "\\)") (1 font-lock-function-name-face))
     (,(concat "<\\(" handlebars-mode-standalone-tag "\\)") (1 font-lock-function-name-face))
     (,handlebars-mode-html-constant (1 font-lock-variable-name-face))))
