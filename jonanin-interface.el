@@ -50,4 +50,8 @@
 ;; truncate lines instead of wrapping them
 (set-default 'truncate-lines t)
 
+;; set font
+(set-face-attribute 'default nil :font "Source Code Pro")
+(set-face-attribute 'default nil :height 120)
+
 (provide 'jonanin-interface)
