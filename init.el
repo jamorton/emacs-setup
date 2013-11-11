@@ -40,4 +40,6 @@
           (directory-files (concat dotfiles-dir "modes/") 't "^[^#].*el$"))
   ))
 
+(dired "~/dev")
+
 (provide 'init)
