@@ -1,6 +1,8 @@
 elpa/*
+.cask/*
 backups
 auto-save-list
 !elpa/package.el
 ac-comphist.dat
 *.elc
+flycheck_*

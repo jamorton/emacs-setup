@@ -24,16 +24,9 @@
 ;; Column numbers
 (column-number-mode 1)
 
-;; Smooth scrolling (from http://www.emacswiki.org/emacs/SmoothScrolling)
-(require 'smooth-scrolling)
-
 ;; unique names
 (require 'uniquify)
 (setq uniquify-buffer-name-style 'forward)
-
-;; color theme
-(add-to-list 'custom-theme-load-path (concat dotfiles-dir "themes/"))
-(load-theme 'zenburn t)
 
 ;; Ido-mode
 (ido-mode t)

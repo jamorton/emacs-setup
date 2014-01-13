@@ -9,7 +9,7 @@
 (add-hook 'python-mode-hook
   (lambda ()
 	(local-set-key (kbd "RET") 'newline-and-indent)
-	(setq indent-tabs-mode t)
+	(setq indent-tabs-mode nil)
 	(setq python-indent-offset 4)
 	(setq tab-width 4)
 	))
