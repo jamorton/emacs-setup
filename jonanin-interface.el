@@ -30,11 +30,12 @@
 
 ;; Ido-mode
 (ido-mode t)
-(setq-default ido-enable-prefix nil
-      ido-enable-flex-matching t
-      ido-create-new-buffer 'always
-      ido-use-filename-at-point nil
-      ido-max-prospects 10)
+(ido-everywhere 1)
+(flx-ido-mode 1)
+(setq-default
+  ido-use-faces nil
+  ido-create-new-buffer 'always
+  ido-use-filename-at-point nil)
 
 ;; no splash
 (setq inhibit-splash-screen t)
