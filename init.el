@@ -6,29 +6,16 @@
 
 ;; Setup config paths
 (defvar dotfiles-dir (file-name-directory load-file-name))
-
 (add-to-list 'load-path dotfiles-dir)
 
+;; Load Cask (and all third party packages)
 (require 'cask "~/.cask/cask.el")
 (cask-initialize)
-
-
-(setq exec-path (split-string (getenv "PATH") ":"))
-
-(dired "~/dev")
 
 ;; Load core stuff
 (require 'jonanin)
 (require 'jonanin-interface)
 (require 'jonanin-input)
 (require 'jonanin-binds)
-
-(add-hook 'after-init-hook
-  (lambda()
-    (global-flycheck-mode)
-    (load-theme 'zenburn t)
-    (mapc 'load
-          (directory-files (concat dotfiles-dir "modes/") 't "^[^#].*el$"))
-  ))
 
 (provide 'init)
