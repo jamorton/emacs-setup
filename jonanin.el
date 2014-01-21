@@ -13,9 +13,6 @@
 ;; find files in ~/dev by default
 (dired "~/dev")
 
-;; Load PATH from shell environment
-(setq exec-path (split-string (getenv "PATH") ":"))
-
 (add-hook 'after-init-hook
   (lambda()
     (global-flycheck-mode)

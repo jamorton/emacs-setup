@@ -12,6 +12,17 @@
 (require 'cask "~/.cask/cask.el")
 (cask-initialize)
 
+(when (memq window-system '(mac ns))
+  (exec-path-from-shell-initialize))
+
+;; Load PATH from shell environment
+ (defun print-elements-of-list (list)
+       "Print each element of LIST on a line of its own."
+       (while list
+         (print (car list))
+         (setq list (cdr list))))
+(print-elements-of-list exec-path)
+
 ;; Load core stuff
 (require 'jonanin)
 (require 'jonanin-interface)
