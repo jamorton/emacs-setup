@@ -17,8 +17,6 @@
   (lambda()
     (global-flycheck-mode)
     (load-theme 'zenburn t)
-    (mapc 'load
-          (directory-files (concat dotfiles-dir "modes/") 't "^[^#].*el$"))
   ))
 
 ;; the end

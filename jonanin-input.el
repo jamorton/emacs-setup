@@ -25,4 +25,7 @@
 ;; make sure there is always a newline at the end of the file
 (setq require-final-newline t)
 
+;;; Automatically follow symlinks (don't prompt)
+(setq-default vc-follow-symlinks t)
+
 (provide 'jonanin-input)
