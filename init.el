@@ -12,21 +12,24 @@
 (require 'cask "~/.cask/cask.el")
 (cask-initialize)
 
+;; Load PATH from shell environment
 (when (memq window-system '(mac ns))
   (exec-path-from-shell-initialize))
 
-;; Load PATH from shell environment
- (defun print-elements-of-list (list)
-       "Print each element of LIST on a line of its own."
-       (while list
-         (print (car list))
-         (setq list (cdr list))))
-(print-elements-of-list exec-path)
+(add-hook 'after-init-hook
+ (lambda()
+   (mapc 'load
+         (directory-files (concat dotfiles-dir "modes/") 't "^[^#].*el$"))))
 
 ;; Load core stuff
 (require 'jonanin)
 (require 'jonanin-interface)
 (require 'jonanin-input)
 (require 'jonanin-binds)
+
+;; start server for emacsclient
+(server-start)
+
+(setq-default flycheck-disabled-checkers '(scss c/c++-clang))
 
 (provide 'init)
