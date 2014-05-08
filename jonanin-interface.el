@@ -47,6 +47,6 @@
 
 ;; set font
 (set-face-attribute 'default nil :font "Source Code Pro")
-(set-face-attribute 'default nil :height 120)
+(set-face-attribute 'default nil :height 130)
 
 (provide 'jonanin-interface)

@@ -11,6 +11,7 @@
 ;; Load Cask (and all third party packages)
 (require 'cask "~/.cask/cask.el")
 (cask-initialize)
+(require 'pallet)
 
 ;; Load PATH from shell environment
 (when (memq window-system '(mac ns))
