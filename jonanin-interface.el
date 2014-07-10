@@ -36,7 +36,9 @@
 (setq-default
   ido-use-faces nil
   ido-create-new-buffer 'always
-  ido-use-filename-at-point nil)
+  ido-use-filename-at-point nil
+  ido-auto-merge-work-directories-length -1
+  ido-case-fold t)
 
 ;; no splash
 (setq inhibit-splash-screen t)
@@ -46,7 +48,8 @@
 (set-default 'truncate-lines t)
 
 ;; set font
-(set-face-attribute 'default nil :font "Source Code Pro")
-(set-face-attribute 'default nil :height 130)
+(when (display-graphic-p)
+  (set-face-attribute 'default nil :font "Source Code Pro")
+  (set-face-attribute 'default nil :height 130))
 
 (provide 'jonanin-interface)
