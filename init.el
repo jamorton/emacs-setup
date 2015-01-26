@@ -17,6 +17,7 @@
 (when (memq window-system '(mac ns))
   (exec-path-from-shell-initialize))
 
+;; Load every .el file in the modes/ directory
 (add-hook 'after-init-hook
  (lambda()
    (mapc 'load
@@ -31,6 +32,9 @@
 ;; start server for emacsclient
 (server-start)
 
-(setq-default flycheck-disabled-checkers '(scss c/c++-clang))
+(setq-default flycheck-disabled-checkers '(scss c/c++-clang c/c++-gcc))
+
+;; Reload files automatically when they change on the disk
+(global-auto-revert-mode t)
 
 (provide 'init)
