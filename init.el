@@ -45,6 +45,10 @@
 (if (functionp 'turn-off-tool-bar)
     (add-hook 'before-make-frame-hook 'turn-off-tool-bar))
 
+;; no splash
+(setq inhibit-splash-screen t)
+(setq inhibit-startup-message t)
+
 ;; use utf-8 everywhere
 (set-terminal-coding-system 'utf-8)
 (set-keyboard-coding-system 'utf-8)
@@ -73,10 +77,6 @@
   ido-use-filename-at-point nil
   ido-auto-merge-work-directories-length -1
   ido-case-fold t)
-
-;; no splash
-(setq inhibit-splash-screen t)
-(setq inhibit-startup-message t)
 
 ;; truncate lines instead of wrapping them
 (set-default 'truncate-lines t)
@@ -117,7 +117,7 @@
 ;; Magit
 (global-set-key (kbd "C-x g") 'magit-status)
 
-;; Insert on each line
+;; Insert string on each line (rectangle insert)
 (global-set-key (kbd "C-x r a") 'string-insert-rectangle)
 
 ;; Smex
