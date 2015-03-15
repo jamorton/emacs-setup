@@ -8,10 +8,11 @@
 (defvar dotfiles-dir (file-name-directory load-file-name))
 (add-to-list 'load-path dotfiles-dir)
 
-;; Load Cask (and all third party packages)
+;; Load Cask and Pallet (and all third party packages)
 (require 'cask "~/.cask/cask.el")
 (cask-initialize)
 (require 'pallet)
+(pallet-mode t)
 
 ;; Load PATH from shell environment
 (when (memq window-system '(mac ns))
