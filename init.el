@@ -18,25 +18,9 @@
 (when (memq window-system '(mac ns))
   (exec-path-from-shell-initialize))
 
-;; Load every .el file in the modes/ directory
-(add-hook 'after-init-hook
- (lambda()
-   (mapc 'load
-         (directory-files (concat dotfiles-dir "modes/") 't "^[^#].*el$"))))
-
-
 ;; Don't put backup files in every directory
 (setq backup-directory-alist `(("." . ,(expand-file-name
                                         (concat dotfiles-dir "backups")))))
-
-;; load magit
-(require 'magit)
-
-(add-hook 'after-init-hook
-  (lambda()
-    (global-flycheck-mode)
-    (load-theme 'zenburn t)
-  ))
 
 ;; create intermediate directories before saving a file
 (add-hook 'before-save-hook
@@ -46,6 +30,9 @@
                 (when (and (not (file-exists-p dir))
                            (y-or-n-p (format "Directory %s does not exist. Create it?" dir)))
                   (make-directory dir t))))))
+
+;; Reload files automatically when they change on the disk
+(global-auto-revert-mode t)
 
 ;; minimal window, use mouse wheel, turn off cursor blink
 (when window-system
@@ -144,15 +131,29 @@
 (setq compilation-ask-about-save nil)
 (global-set-key (kbd "C-x c") 'compile)
 
+;; flycheck config
+(setq-default flycheck-disabled-checkers '(scss c/c++-clang c/c++-gcc))
+
+;; load flycheck and the theme
+(add-hook 'after-init-hook
+  (lambda()
+    (global-flycheck-mode)
+    (load-theme 'zenburn t)
+  ))
+
+;; Load every .el file in the modes/ directory
+(add-hook 'after-init-hook
+ (lambda()
+   (mapc 'load
+         (directory-files (concat dotfiles-dir "modes/") 't "^[^#].*el$"))))
+
 ;; start server for emacsclient
 (server-start)
 
-(setq-default flycheck-disabled-checkers '(scss c/c++-clang c/c++-gcc))
-
-;; Reload files automatically when they change on the disk
-(global-auto-revert-mode t)
-
 ;; find files in ~/dev on startup
 (dired "~/dev")
+
+;; load magit
+(require 'magit)
 
 (provide 'init)
