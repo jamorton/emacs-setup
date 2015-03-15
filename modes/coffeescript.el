@@ -1,7 +1,3 @@
-;;
-;; Jonanin's Emacs Configuration - jonanin-coffee.el
-;; CoffeeScript langauge-specific stuff
-;;
 
 (add-hook 'coffee-mode-hook '(lambda ()
   (make-local-variable 'tab-width)
